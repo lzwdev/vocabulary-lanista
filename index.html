@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latein Vokabeltrainer Pro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            --card-bg: rgba(255, 255, 255, 0.98);
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --purple: #9b59b6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 1000px;
+            border-radius: 24px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            min-height: 650px;
+            transition: all 0.3s ease;
+        }
+
+        .hidden { display: none !important; }
+
+        h1, h2, h3 { text-align: center; color: var(--primary); margin-bottom: 10px; }
+        h1 { font-size: 32px; font-weight: 700; }
+        h2 { font-size: 24px; font-weight: 600; }
+        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 30px; font-size: 14px; }
+
+        /* --- Startseite --- */
+        .start-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stats-btn {
+            background: var(--purple);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .stats-btn:hover { background: #8e44ad; transform: scale(1.05); }
+
+        .lektion-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .lektion-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .lektion-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .lektion-card h3 { margin: 0; font-size: 22px; color: var(--accent); }
+        .lektion-card span { font-size: 12px; color: #95a5a6; margin-top: 5px; }
+        
+        .lektion-card .best-score {
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--success);
+            background: #eafaf1;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        /* --- Lernmodus --- */
+        .learning-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .back-btn {
+            background: #ecf0f1;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            color: var(--primary);
+            transition: background 0.2s;
+        }
+        .back-btn:hover { background: #dde1e2; }
+
+        .question-wrapper {
+            overflow: hidden;
+            position: relative;
+            min-height: 100px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .question-display {
+            font-size: 38px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--primary);
+            letter-spacing: 1px;
+            padding: 15px 30px;
+            border-radius: 12px;
+            transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.45s ease, background 0.3s ease;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .status-badge {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #d35400;
+            background: #fef9e7;
+            border: 1px solid #f9e79f;
+            border-radius: 8px;
+            padding: 5px 15px;
+            display: inline-block;
+            margin-bottom: 5px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .slide-out-left { transform: translateX(-120%) !important; opacity: 0 !important; }
+        .slide-out-down { transform: translateY(120%) !important; opacity: 0 !important; }
+        .slide-in-right { transform: translateX(120%) !important; opacity: 0 !important; }
+
+        .modes-container { display: flex; gap: 20px; margin-bottom: 20px; }
+
+        @media (max-width: 768px) { .modes-container { flex-direction: column; } }
+
+        .mode-box {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .mode-box h4 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #7f8c8d;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 10px; flex-grow: 1; }
+
+        .option-btn {
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #bdc3c7;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option-btn:not(:disabled):not(.correct):hover {
+            border-color: var(--accent);
+            background: #eaf4fc;
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct, .option-btn.correct:hover {
+            background: var(--success) !important;
+            color: white !important;
+            border-color: var(--success) !important;
+            transform: none !important;
+        }
+
+        .option-btn.wrong, .option-btn.wrong:hover {
+            background: var(--danger) !important;
+            color: white !important;
+            border-color: var(--danger) !important;
+            transform: none !important;
+        }
+
+        .check-icon {
+            width: 20px; height: 20px; fill: white;
+            opacity: 0; transform: scale(0.5);
+            transition: all 0.3s ease;
+        }
+        .option-btn.correct .check-icon { opacity: 1; transform: scale(1); }
+
+        .input-mode { display: flex; flex-direction: column; justify-content: center; flex-grow: 1; }
+
+        .input-mode input {
+            width: 100%; padding: 15px; font-size: 18px;
+            border: 2px solid #bdc3c7; border-radius: 12px;
+            margin-bottom: 15px; font-family: 'Poppins', sans-serif;
+            outline: none; transition: border 0.3s; text-align: center;
+        }
+        .input-mode input:focus { border-color: var(--accent); }
+
+        .btn-submit {
+            padding: 15px; background: var(--accent); color: white;
+            border: none; border-radius: 12px; font-size: 16px;
+            font-weight: 600; cursor: pointer; transition: background 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+        .btn-submit:hover { background: #2980b9; }
+
+        .bottom-action {
+            text-align: center; margin-top: 10px; min-height: 80px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border-top: 1px solid #eee; padding-top: 20px;
+        }
+
+        .btn-forgot {
+            background: var(--warning); color: white; border: none;
+            padding: 15px 40px; font-size: 18px; border-radius: 50px;
+            cursor: pointer; font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+        }
+        .btn-forgot:hover { background: #e67e22; transform: scale(1.05); }
+
+        .solution-reveal {
+            font-size: 28px; font-weight: 700; color: var(--success);
+            background: #eafaf1; padding: 15px 40px; border-radius: 12px;
+            border: 2px dashed var(--success); animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Statistik --- */
+        .stats-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 20px;
+        }
+
+        .stats-controls {
+            display: flex; gap: 15px; flex-wrap: wrap;
+            margin-bottom: 20px; align-items: center;
+            background: #f8f9fa; padding: 15px;
+            border-radius: 12px; border: 1px solid #e9ecef;
+        }
+
+        .stats-controls label {
+            font-weight: 600; font-size: 14px; color: #7f8c8d;
+        }
+
+        .stats-controls select {
+            padding: 8px 12px; border-radius: 8px;
+            border: 2px solid #bdc3c7; font-family: 'Poppins', sans-serif;
+            font-size: 14px; cursor: pointer; outline: none;
+        }
+        .stats-controls select:focus { border-color: var(--accent); }
+
+        .change-indicator {
+            font-size: 16px; font-weight: 600;
+            padding: 10px 20px; border-radius: 10px;
+            text-align: center; margin-bottom: 15px;
+        }
+        .change-positive { background: #eafaf1; color: var(--success); }
+        .change-negative { background: #fdedec; color: var(--danger); }
+        .change-neutral { background: #f8f9fa; color: #7f8c8d; }
+
+        .chart-container {
+            position: relative; height: 350px; width: 100%;
+            background: white; border-radius: 16px;
+            padding: 20px; border: 1px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+
+        /* Popup */
+        .popup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex;
+            justify-content: center; align-items: center;
+            z-index: 1000; animation: fadeIn 0.3s ease;
+        }
+
+        .popup-box {
+            background: white; border-radius: 20px; padding: 40px;
+            max-width: 450px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.7); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .popup-box h3 { font-size: 24px; margin-bottom: 15px; }
+        .popup-box p { font-size: 16px; color: #7f8c8d; margin-bottom: 25px; line-height: 1.5; }
+        
+        .popup-buttons { display: flex; gap: 15px; justify-content: center; }
+        .popup-buttons button {
+            padding: 12px 25px; border: none; border-radius: 10px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            font-family: 'Poppins', sans-serif; transition: all 0.2s;
+        }
+        .popup-btn-pause { background: var(--warning); color: white; }
+        .popup-btn-pause:hover { background: #e67e22; transform: scale(1.05); }
+        .popup-btn-continue { background: var(--accent); color: white; }
+        .popup-btn-continue:hover { background: #2980b9; transform: scale(1.05); }
+
+        /* --- Testmodus --- */
+        .test-header {
+            display: flex; justify-content: space-between;
+            font-size: 16px; font-weight: 600;
+            margin-bottom: 20px; color: #7f8c8d;
+        }
+
+        .progress-bar {
+            width: 100%; height: 12px; background-color: #ecf0f1;
+            border-radius: 6px; margin-bottom: 30px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, var(--accent), #2ecc71);
+            width: 0%; transition: width 0.4s ease;
+        }
+
+        .result-score { font-size: 64px; font-weight: 700; color: var(--accent); text-align: center; margin: 20px 0; }
+        .result-grade { font-size: 36px; font-weight: 700; text-align: center; margin-bottom: 20px; }
+        .grade-1 { color: #27ae60; }
+        .grade-2 { color: #2ecc71; }
+        .grade-3 { color: #f1c40f; }
+        .grade-4 { color: #e67e22; }
+        .grade-5 { color: #e74c3c; }
+        .grade-6 { color: #c0392b; }
+
+        /* Spruch-Box */
+        .spruch-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 20px; border-radius: 15px;
+            text-align: center; margin: 20px 0;
+            font-style: italic; font-size: 16px;
+            box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- STARTSEITE -->
+    <div id="start-screen">
+        <div class="start-header">
+            <h1 style="text-align:left; margin:0;">📚 Latein Trainer</h1>
+            <button class="stats-btn" onclick="showStats()">📊 Statistiken</button>
+        </div>
+        <p class="subtitle" style="text-align:left;">Wähle eine Lektion zum Üben oder Testen</p>
+        <div class="lektion-grid" id="lektion-grid"></div>
+    </div>
+
+    <!-- STATISTIK -->
+    <div id="stats-screen" class="hidden">
+        <div class="stats-header">
+            <button class="back-btn" onclick="goToStart()">⬅ Menü</button>
+            <h2>📊 Statistiken</h2>
+            <div style="width: 80px;"></div>
+        </div>
+
+        <div class="stats-controls">
+            <label for="stats-lektion">Lektion:</label>
+            <select id="stats-lektion" onchange="updateStats()">
+                <option value="all">Alle Lektionen</option>
+            </select>
+            <label for="stats-type">Diagramm:</label>
+            <select id="stats-type" onchange="updateStats()">
+                <option value="bar">Säulendiagramm</option>
+                <option value="line">Liniendiagramm</option>
+            </select>
+        </div>
+
+        <div id="change-indicator" class="change-indicator change-neutral">
+            Noch keine Daten vorhanden.
+        </div>
+
+        <div class="chart-container">
+            <canvas id="stats-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- LERNMODUS -->
+    <div id="learn-screen" class="hidden">
+        <div class="learning-header">
+            <button class="back-btn" onclick="goToStart()">⬅ Menü</button>
+            <h3 id="learn-lektion-title">Lektion 1</h3>
+            <span id="learn-progress" style="font-weight:600; color:#7f8c8d;">1 / 10</span>
+        </div>
+
+        <div id="status-container" class="hidden" style="text-align:center; min-height: 30px;">
+            <span class="status-badge" id="status-badge">⚠️ Zuvor falsch</span>
+        </div>
+
+        <div class="question-wrapper">
+            <div class="question-display" id="learn-question">Lädt...</div>
+        </div>
+
+        <div class="modes-container">
+            <div class="mode-box">
+                <h4>Auswahl</h4>
+                <div class="options-grid" id="options-container"></div>
+            </div>
+
+            <div class="mode-box">
+                <h4>Eingeben</h4>
+                <div class="input-mode">
+                    <input type="text" id="learn-input" placeholder="Übersetzung..." autocomplete="off">
+                    <button class="btn-submit" onclick="checkInput()">Prüfen</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-action" id="bottom-action-area">
+            <button class="btn-forgot" id="btn-forgot" onclick="revealSolution()">Vergessen / Lösung zeigen</button>
+            <div class="solution-reveal hidden" id="solution-display"></div>
+        </div>
+    </div>
+
+    <!-- TESTMODUS -->
+    <div id="test-screen" class="hidden">
+        <div class="test-header">
+            <span id="test-progress-text">Frage 1 / 10</span>
+            <span id="test-score-text">Punkte: 0</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="test-progress-fill"></div>
+        </div>
+
+        <div class="question-display" id="test-question">Lädt...</div>
+        
+        <div class="input-mode" style="max-width: 400px; margin: 0 auto;">
+            <input type="text" id="test-input" placeholder="Übersetzung eingeben..." autocomplete="off">
+            <button class="btn-submit" onclick="submitTestAnswer()">Absenden</button>
+        </div>
+        
+        <div class="bottom-action" id="test-feedback-area" style="min-height: 60px;"></div>
+    </div>
+
+    <!-- ERGEBNIS -->
+    <div id="result-screen" class="hidden">
+        <h2>Test beendet!</h2>
+        <div class="result-score" id="final-score">0 / 0</div>
+        <div class="result-grade" id="final-grade">Note: -</div>
+        <p id="final-message" style="text-align:center; font-size:18px;"></p>
+        <div style="text-align:center; margin-top:30px;">
+            <button class="back-btn" onclick="goToStart()">Zurück zum Hauptmenü</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- POPUP -->
+<div id="popup-overlay" class="popup-overlay hidden">
+    <div class="popup-box">
+        <h3 id="popup-title">Zeit für eine Pause?</h3>
+        <p id="popup-message">Du hast in letzter Zeit etwas nachgelassen. Möchtest du eine kurze Pause machen?</p>
+        <div class="spruch-box" id="popup-spruch">
+            "Auch der längste Weg beginnt mit einem einzigen Schritt."
+        </div>
+        <div class="popup-buttons">
+            <button class="popup-btn-pause" onclick="takePause()">☕ Pause machen</button>
+            <button class="popup-btn-continue" onclick="continueLearning()">💪 Weitermachen</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // ==========================================
+    // 1. DATENBANK (Alle Vokabeln aus Lektion 1-14)
+    // ==========================================
+    const vokabelnDB = {
+        1: [
+            { latein: "senātor", deutsch: "Senator" },
+            { latein: "forum", deutsch: "Marktplatz, Forum, Öffentlichkeit" },
+            { latein: "properāre", deutsch: "eilen, sich beeilen" },
+            { latein: "nam", deutsch: "denn, nämlich" },
+            { latein: "ibī", deutsch: "dort" },
+            { latein: "cūria", deutsch: "Kurie, Rathaus" },
+            { latein: "esse", deutsch: "sein" },
+            { latein: "hīc", deutsch: "hier" },
+            { latein: "turba", deutsch: "Menschenmenge, Lärm, Verwirrung" },
+            { latein: "stāre", deutsch: "stehen" },
+            { latein: "et", deutsch: "und, auch" },
+            { latein: "clāmāre", deutsch: "laut rufen, schreien" },
+            { latein: "avē!", deutsch: "sei gegrüßt!" },
+            { latein: "gaudēre", deutsch: "sich freuen" },
+            { latein: "salvē!", deutsch: "sei gegrüßt!" },
+            { latein: "salvēte!", deutsch: "seid gegrüßt!" },
+            { latein: "subitō", deutsch: "plötzlich" },
+            { latein: "servus", deutsch: "Sklave" },
+            { latein: "adesse", deutsch: "da sein" },
+            { latein: "rogāre", deutsch: "bitten, erbitten, fragen" },
+            { latein: "ubī?", deutsch: "wo?" },
+            { latein: "rīdēre", deutsch: "lachen, auslachen" },
+            { latein: "tum", deutsch: "da, damals, darauf, dann" }
+        ],
+        2: [
+            { latein: "nam", deutsch: "denn, nämlich" },
+            { latein: "adesse", deutsch: "da sein" },
+            { latein: "stāre", deutsch: "stehen" },
+            { latein: "gaudēre", deutsch: "sich freuen" },
+            { latein: "hodīē", deutsch: "heute" },
+            { latein: "circus", deutsch: "Zirkus, Rennbahn" },
+            { latein: "lūdus", deutsch: "Spiel, Wettkampf, Schule" },
+            { latein: "sunt", deutsch: "sie sind" },
+            { latein: "sed", deutsch: "aber, sondern" },
+            { latein: "amīcus", deutsch: "Freund" },
+            { latein: "diū", deutsch: "lange Zeit" },
+            { latein: "exspectāre", deutsch: "warten, erwarten" },
+            { latein: "tandem", deutsch: "endlich" },
+            { latein: "populus", deutsch: "Volk" },
+            { latein: "etiam", deutsch: "auch, sogar" },
+            { latein: "nunc", deutsch: "jetzt, nun" },
+            { latein: "tacēre", deutsch: "schweigen" },
+            { latein: "porta", deutsch: "Tor" },
+            { latein: "patēre", deutsch: "offenstehen, sich erstrecken" },
+            { latein: "equus", deutsch: "Pferd" },
+            { latein: "accēdere", deutsch: "herbeikommen, hinzukommen" },
+            { latein: "dēnique", deutsch: "schließlich, zuletzt" },
+            { latein: "sīgnum", deutsch: "Merkmal, Zeichen" },
+            { latein: "dare", deutsch: "geben" },
+            { latein: "currere", deutsch: "eilen, laufen" },
+            { latein: "surgere", deutsch: "aufstehen, sich erheben" },
+            { latein: "vocāre", deutsch: "rufen, nennen" },
+            { latein: "victor", deutsch: "Sieger" },
+            { latein: "ecce", deutsch: "schau / schaut! sieh da / seht da!" },
+            { latein: "praemium", deutsch: "Belohnung, Lohn, (Sieges-)Preis" },
+            { latein: "Aulus", deutsch: "Aulus (männlicher Eigenname)" },
+            { latein: "Gāius", deutsch: "Gajus (männlicher Eigenname)" },
+            { latein: "Syrus", deutsch: "Syrus (männlicher Eigenname)" }
+        ],
+        3: [
+            { latein: "subitō", deutsch: "plötzlich" },
+            { latein: "accēdere", deutsch: "herbeikommen, hinzukommen" },
+            { latein: "properāre", deutsch: "eilen, sich beeilen" },
+            { latein: "ad", deutsch: "an, bei, nach, zu" },
+            { latein: "per", deutsch: "durch, hindurch" },
+            { latein: "amīca", deutsch: "Freundin" },
+            { latein: "vidēre", deutsch: "sehen, darauf achten" },
+            { latein: "petere", deutsch: "(auf)suchen, (er)streben, bitten, verlangen" },
+            { latein: "templum", deutsch: "Tempel" },
+            { latein: "aedificium", deutsch: "Gebäude" },
+            { latein: "spectāre", deutsch: "betrachten, hinschauen" },
+            { latein: "basilica", deutsch: "Basilika, Halle" },
+            { latein: "intrāre", deutsch: "betreten, eintreten" },
+            { latein: "mercātor", deutsch: "Kaufmann, Händler" },
+            { latein: "contendere", deutsch: "eilen; sich anstrengen" },
+            { latein: "bēstia", deutsch: "Tier" },
+            { latein: "vendere", deutsch: "verkaufen" },
+            { latein: "ante", deutsch: "vor" },
+            { latein: "taberna", deutsch: "Laden, Werkstatt, Gasthaus" },
+            { latein: "statim", deutsch: "auf der Stelle, sofort" },
+            { latein: "in", deutsch: "in (... hinein), nach (... hin), gegen" },
+            { latein: "dēlectāre", deutsch: "erfreuen, unterhalten" },
+            { latein: "mulier", deutsch: "Frau" },
+            { latein: "autem", deutsch: "aber, andererseits" },
+            { latein: "clāmor", deutsch: "Geschrei, Lärm" },
+            { latein: "tollere", deutsch: "aufheben, in die Höhe heben, wegnehmen" },
+            { latein: "clāmōrem tollere", deutsch: "ein Geschrei erheben" },
+            { latein: "quid?", deutsch: "was?" },
+            { latein: "quis?", deutsch: "wer?" },
+            { latein: "itaque", deutsch: "deshalb" },
+            { latein: "relinquere", deutsch: "unbeachtet lassen, verlassen, zurücklassen" },
+            { latein: "cūr?", deutsch: "warum?" },
+            { latein: "apud", deutsch: "bei, nahe bei" },
+            { latein: "nōn", deutsch: "nicht" },
+            { latein: "iam", deutsch: "schon, nun" },
+            { latein: "nōn iam", deutsch: "nicht mehr" }
+        ],
+        4: [
+            { latein: "petere", deutsch: "(auf)suchen, (er)streben, bitten, verlangen" },
+            { latein: "mercātor", deutsch: "Kaufmann, Händler" },
+            { latein: "tacēre", deutsch: "schweigen" },
+            { latein: "clāmor", deutsch: "Geschrei, Lärm" },
+            { latein: "turba", deutsch: "Menschenmenge, Lärm, Verwirrung" },
+            { latein: "rīdēre", deutsch: "lachen, auslachen" },
+            { latein: "in", deutsch: "in, an, auf, bei (wo?)" },
+            { latein: "cum", deutsch: "mit, zusammen mit" },
+            { latein: "thermae", deutsch: "Thermen, Badeanlage" },
+            { latein: "vestis", deutsch: "Kleid, Kleidung" },
+            { latein: "dēpōnere", deutsch: "ablegen, niederlegen, aufgeben" },
+            { latein: "dē", deutsch: "von, von ... her, von ... herab; über" },
+            { latein: "cōgitāre", deutsch: "denken, beabsichtigen" },
+            { latein: "cōgitāre dē", deutsch: "denken an" },
+            { latein: "amāre", deutsch: "lieben, gernhaben" },
+            { latein: "semper", deutsch: "immer" },
+            { latein: "dōnum", deutsch: "Geschenk" },
+            { latein: "vult", deutsch: "er (sie, es) will" },
+            { latein: "tamen", deutsch: "dennoch, jedoch" },
+            { latein: "laudāre", deutsch: "loben" },
+            { latein: "tē", deutsch: "dich" },
+            { latein: "certē", deutsch: "gewiss, sicherlich" },
+            { latein: "complēre", deutsch: "anfüllen, erfüllen" },
+            { latein: "senex", deutsch: "Greis, alter Mann" },
+            { latein: "vīnum", deutsch: "Wein" },
+            { latein: "sūmere", deutsch: "nehmen" },
+            { latein: "prō", deutsch: "anstelle von, für, vor" },
+            { latein: "pecūnia", deutsch: "Geld, Vermögen" },
+            { latein: "fūr", deutsch: "Dieb" },
+            { latein: "tantum", deutsch: "nur" },
+            { latein: "numquam", deutsch: "niemals" },
+            { latein: "uxor", deutsch: "Ehefrau" },
+            { latein: "adulescēns", deutsch: "junger Mann" },
+            { latein: "Lūcius", deutsch: "Lucius (männlicher Eigenname)" },
+            { latein: "Quīntus", deutsch: "Quintus (männlicher Eigenname)" }
+        ],
+        5: [
+            { latein: "hodīē", deutsch: "heute" },
+            { latein: "currere", deutsch: "eilen, laufen" },
+            { latein: "cūria", deutsch: "Kurie, Rathaus" },
+            { latein: "accēdere", deutsch: "herbeikommen, hinzukommen" },
+            { latein: "tandem", deutsch: "endlich" },
+            { latein: "gaudēre", deutsch: "sich freuen" },
+            { latein: "cōnsistere", deutsch: "haltmachen, sich aufstellen" },
+            { latein: "dubitāre", deutsch: "zögern" },
+            { latein: "respondēre", deutsch: "antworten, entsprechen" },
+            { latein: "undique", deutsch: "von allen Seiten" },
+            { latein: "circum", deutsch: "um ... herum, rings um" },
+            { latein: "nūntius", deutsch: "Bote, Nachricht" },
+            { latein: "victōria", deutsch: "Sieg" },
+            { latein: "nūntiāre", deutsch: "melden" },
+            { latein: "ē / ex", deutsch: "aus, von ... her" },
+            { latein: "repente", deutsch: "plötzlich" },
+            { latein: "cōnsul", deutsch: "Konsul" },
+            { latein: "līctor", deutsch: "Liktor" },
+            { latein: "palam", deutsch: "bekannt, in aller Öffentlichkeit" },
+            { latein: "gaudēre m. Abl.", deutsch: "sich freuen über etw." },
+            { latein: "licet", deutsch: "es ist erlaubt, es ist möglich" },
+            { latein: "quod", deutsch: "dass, weil" },
+            { latein: "iniūria", deutsch: "Unrecht, Beleidigung, Gewalt" },
+            { latein: "dolēre", deutsch: "schmerzen; bedauern, kondolieren" },
+            { latein: "dolōrem sentīre", deutsch: "Schmerz empfinden (über etw.)" },
+            { latein: "barbarus", deutsch: "Ausländer, „Barbar“" },
+            { latein: "pugnāre", deutsch: "kämpfen" },
+            { latein: "patria", deutsch: "Heimat" },
+            { latein: "arma", deutsch: "Waffen, Gerät" },
+            { latein: "dēfendere", deutsch: "verteidigen, abwehren, schützen" },
+            { latein: "deus", deutsch: "Gott, Gottheit" },
+            { latein: "colere", deutsch: "bewirtschaften, pflegen; verehren" },
+            { latein: "dēbēre", deutsch: "müssen, sollen; schulden" },
+            { latein: "sine", deutsch: "ohne" },
+            { latein: "perīculum", deutsch: "Gefahr" },
+            { latein: "vīvere", deutsch: "leben" }
+        ],
+        6: [
+            { latein: "exspectāre", deutsch: "warten, erwarten" },
+            { latein: "forum", deutsch: "Marktplatz, Forum, Öffentlichkeit" },
+            { latein: "etiam", deutsch: "auch, sogar" },
+            { latein: "intrāre", deutsch: "betreten, eintreten" },
+            { latein: "statim", deutsch: "auf der Stelle, sofort" },
+            { latein: "vendere", deutsch: "verkaufen" },
+            { latein: "puer", deutsch: "Junge, Bub" },
+            { latein: "mittere", deutsch: "(los)lassen, schicken, werfen" },
+            { latein: "domina", deutsch: "Herrin" },
+            { latein: "emere", deutsch: "kaufen" },
+            { latein: "serva", deutsch: "Sklavin" },
+            { latein: "parāre", deutsch: "bereiten, vorbereiten; vorhaben; erwerben" },
+            { latein: "ōrnāre", deutsch: "schmücken" },
+            { latein: "mēnsa", deutsch: "Tisch" },
+            { latein: "labōrāre", deutsch: "arbeiten" },
+            { latein: "cēna", deutsch: "Essen, Mahlzeit" },
+            { latein: "iubēre", deutsch: "anordnen, befehlen" },
+            { latein: "puella", deutsch: "Mädchen" },
+            { latein: "adesse", deutsch: "da sein; helfen" },
+            { latein: "tū", deutsch: "du" },
+            { latein: "illūc", deutsch: "dahin, dorthin" },
+            { latein: "bene", deutsch: "gut" },
+            { latein: "līberī", deutsch: "Kinder" },
+            { latein: "māter", deutsch: "Mutter" },
+            { latein: "ostendere", deutsch: "zeigen, darlegen" },
+            { latein: "placēre", deutsch: "gefallen" },
+            { latein: "paulō", deutsch: "(um) ein wenig" },
+            { latein: "post", deutsch: "hinter, nach; dann, später" },
+            { latein: "paulō post", deutsch: "kurz darauf" },
+            { latein: "aedēs", deutsch: "Haus, Gebäude" },
+            { latein: "portāre", deutsch: "tragen, bringen" },
+            { latein: "Āfra", deutsch: "Afra (weiblicher Eigenname)" },
+            { latein: "Dāvus", deutsch: "Davus (männlicher Eigenname)" },
+            { latein: "Melissa", deutsch: "Melissa (weiblicher Eigenname)" },
+            { latein: "Ancus", deutsch: "Ancus (männlicher Eigenname)" }
+        ],
+        7: [
+            { latein: "portāre", deutsch: "tragen, bringen" },
+            { latein: "velle", deutsch: "wollen" },
+            { latein: "ostendere", deutsch: "zeigen, darlegen" },
+            { latein: "iubēre", deutsch: "anordnen, befehlen" },
+            { latein: "spectāre", deutsch: "betrachten, hinsehen" },
+            { latein: "emere", deutsch: "kaufen" },
+            { latein: "sūmere", deutsch: "nehmen" },
+            { latein: "cum", deutsch: "mit, zusammen mit" },
+            { latein: "relinquere", deutsch: "unbeachtet lassen, verlassen, zurücklassen" },
+            { latein: "convenire", deutsch: "besuchen, zusammenkommen" },
+            { latein: "hospes", deutsch: "Fremder, Gast, Gastgeber" },
+            { latein: "dominus", deutsch: "Herr" },
+            { latein: "cōnsīdere", deutsch: "sich setzen, sich niederlassen" },
+            { latein: "parēre", deutsch: "gehorchen, sich richten nach" },
+            { latein: "aqua", deutsch: "Wasser" },
+            { latein: "posteā", deutsch: "nachher, später" },
+            { latein: "cibus", deutsch: "Nahrung, Speise" },
+            { latein: "praebere", deutsch: "geben, hinhalten" },
+            { latein: "bibere", deutsch: "trinken" },
+            { latein: "ōrātiō", deutsch: "Rede" },
+            { latein: "habēre", deutsch: "haben, halten" },
+            { latein: "vōbīs", deutsch: "euch" },
+            { latein: "grātia", deutsch: "Ansehen, Beliebtheit, Dank, Gefälligkeit" },
+            { latein: "grātiās agere", deutsch: "danken" },
+            { latein: "interesse", deutsch: "dazwischen sein, teilnehmen an" },
+            { latein: "mōs", deutsch: "Sitte, Brauch; Pl. Charakter" },
+            { latein: "māiōrēs", deutsch: "Vorfahren" },
+            { latein: "mūnus", deutsch: "Aufgabe; Geschenk" },
+            { latein: "sīcut", deutsch: "(so) wie" },
+            { latein: "atque", deutsch: "und" },
+            { latein: "indūcere", deutsch: "(hin)einführen, verleiten" },
+            { latein: "quoque", deutsch: "auch" },
+            { latein: "circumvenīre", deutsch: "umringen, umzingeln" },
+            { latein: "narrāre", deutsch: "erzählen (von / über)" },
+            { latein: "iter", deutsch: "Reise, Weg, Marsch" },
+            { latein: "Graecia", deutsch: "Griechenland" },
+            { latein: "Diodōrus", deutsch: "Diodor (männlicher Eigenname)" },
+            { latein: "Philippus", deutsch: "Philipp (männlicher Eigenname)" }
+        ],
+        8: [
+            { latein: "currere", deutsch: "eilen, laufen" },
+            { latein: "cōnsistere", deutsch: "haltmachen, sich aufstellen" },
+            { latein: "petere", deutsch: "bitten, verlangen" },
+            { latein: "quod", deutsch: "dass, weil" },
+            { latein: "venīre", deutsch: "kommen" },
+            { latein: "lībertus", deutsch: "Freigelassener" },
+            { latein: "negōtium", deutsch: "Aufgabe, Geschäft, Angelegenheit" },
+            { latein: "agere", deutsch: "handeln, treiben, verhandeln" },
+            { latein: "vōx", deutsch: "Äußerung, Laut, Stimme" },
+            { latein: "audīre", deutsch: "hören" },
+            { latein: "patrōnus", deutsch: "Patron, (Schutz-)Herr" },
+            { latein: "via", deutsch: "Straße, Weg" },
+            { latein: "mōns", deutsch: "Berg" },
+            { latein: "pervenīre", deutsch: "kommen zu / nach" },
+            { latein: "dūcere", deutsch: "führen, ziehen" },
+            { latein: "propinquus", deutsch: "Verwandter" },
+            { latein: "gēns", deutsch: "Familienverband, Stamm, Volk" },
+            { latein: "parēns", deutsch: "Vater, Mutter" },
+            { latein: "parentēs", deutsch: "Eltern" },
+            { latein: "soror", deutsch: "Schwester" },
+            { latein: "āra", deutsch: "Altar" },
+            { latein: "gaudium", deutsch: "Freude" },
+            { latein: "dea", deutsch: "Göttin" },
+            { latein: "salūs", deutsch: "Gesundheit, Glück, Rettung, Gruß" },
+            { latein: "pāx", deutsch: "Friede" },
+            { latein: "ōrāre", deutsch: "bitten (jdn. um etw.), beten" },
+            { latein: "agnen", deutsch: "(Heeres-)Zug" },
+            { latein: "domum", deutsch: "nach Hause" },
+            { latein: "Decimus", deutsch: "Decimus (männlicher Eigenname)" },
+            { latein: "mōns Equīculīnus", deutsch: "der Esquilin (einer der sieben Hügel Roms)" },
+            { latein: "gēns Aquīlia", deutsch: "die (adlige) Familie der Aquilier" },
+            { latein: "Lārēs", deutsch: "die Laren (Gottheiten, die Haus und Familie beschützten)" },
+            { latein: "Capitōlium", deutsch: "das Kapitol (einer der sieben Hügel Roms)" },
+            { latein: "Iuppiter", deutsch: "Jupiter (höchster Gott der Römer)" },
+            { latein: "Iūnō", deutsch: "Juno (Gemahlin Jupiters)" },
+            { latein: "Aquīliī", deutsch: "die (Mitglieder der Familie der) Aquilier" }
+        ],
+        9: [
+            { latein: "ibī", deutsch: "dort" },
+            { latein: "mulier", deutsch: "Frau" },
+            { latein: "dare", deutsch: "geben" },
+            { latein: "placēre", deutsch: "gefallen" },
+            { latein: "cēna", deutsch: "Essen, Mahlzeit" },
+            { latein: "agere", deutsch: "handeln, treiben, verhandeln" },
+            { latein: "itaque", deutsch: "deshalb" },
+            { latein: "ōrāre", deutsch: "bitten, beten" },
+            { latein: "convenīre", deutsch: "besuchen, zusammenkommen" },
+            { latein: "hospes", deutsch: "Fremder, Gast, Gastgeber" },
+            { latein: "dominus", deutsch: "Herr" },
+            { latein: "cōnsīdere", deutsch: "sich setzen, sich niederlassen" },
+            { latein: "parēre", deutsch: "gehorchen, sich richten nach" },
+            { latein: "aqua", deutsch: "Wasser" },
+            { latein: "posteā", deutsch: "nachher, später" },
+            { latein: "cibus", deutsch: "Nahrung, Speise" },
+            { latein: "praebere", deutsch: "geben, hinhalten" },
+            { latein: "bibere", deutsch: "trinken" },
+            { latein: "ōrātiō", deutsch: "Rede" },
+            { latein: "habēre", deutsch: "haben, halten" },
+            { latein: "vōbīs", deutsch: "euch" },
+            { latein: "grātia", deutsch: "Ansehen, Beliebtheit, Dank, Gefälligkeit" },
+            { latein: "grātiās agere", deutsch: "danken" },
+            { latein: "interesse", deutsch: "dazwischen sein, teilnehmen an" },
+            { latein: "mōs", deutsch: "Sitte, Brauch; Pl. Charakter" },
+            { latein: "māiōrēs", deutsch: "Vorfahren" },
+            { latein: "mūnus", deutsch: "Aufgabe; Geschenk" },
+            { latein: "sīcut", deutsch: "(so) wie" },
+            { latein: "atque", deutsch: "und" },
+            { latein: "indūcere", deutsch: "(hin)einführen, verleiten" },
+            { latein: "quoque", deutsch: "auch" },
+            { latein: "circumvenīre", deutsch: "umringen, umzingeln" },
+            { latein: "narrāre", deutsch: "erzählen (von / über)" },
+            { latein: "iter", deutsch: "Reise, Weg, Marsch" },
+            { latein: "Graecia", deutsch: "Griechenland" },
+            { latein: "Diodōrus", deutsch: "Diodor (männlicher Eigenname)" },
+            { latein: "Philippus", deutsch: "Philipp (männlicher Eigenname)" }
+        ],
+        10: [
+            { latein: "petere", deutsch: "(auf)suchen, (er)streben, bitten, verlangen" },
+            { latein: "emere", deutsch: "kaufen" },
+            { latein: "ostendere", deutsch: "zeigen, darlegen" },
+            { latein: "cupere", deutsch: "verlangen, wünschen, wollen" },
+            { latein: "multitūdō", deutsch: "große Zahl, Menge" },
+            { latein: "homō", deutsch: "Mensch" },
+            { latein: "aspicere", deutsch: "erblicken" },
+            { latein: "nōscere", deutsch: "kennen, wissen, verstehen" },
+            { latein: "sīc", deutsch: "so" },
+            { latein: "līber", deutsch: "Buch" },
+            { latein: "poēta", deutsch: "Dichter" },
+            { latein: "comes", deutsch: "Gefährte, Begleiter(in)" },
+            { latein: "cōnstat", deutsch: "es steht fest" },
+            { latein: "gēns", deutsch: "Geschlecht, Sippe" },
+            { latein: "nē ... quidem", deutsch: "nicht einmal" },
+            { latein: "fidūcia", deutsch: "Vertrauen" },
+            { latein: "carēre", deutsch: "frei sein von, etw. nicht haben" },
+            { latein: "cōnfīdere", deutsch: "vertrauen" },
+            { latein: "gladius", deutsch: "Schwert" },
+            { latein: "Cocles", deutsch: "Horatius Cocles (Held der römischen Frühzeit)" },
+            { latein: "Tuscī", deutsch: "die Etrusker" },
+            { latein: "instituere", deutsch: "beginnen, einrichten, unterrichten" },
+            { latein: "legere", deutsch: "lesen, auswählen" },
+            { latein: "carmen", deutsch: "Lied, Gedicht" },
+            { latein: "carpere", deutsch: "pflücken" },
+            { latein: "corripere", deutsch: "ergreifen, gewaltsam an sich reißen" },
+            { latein: "sinistra", deutsch: "linke Hand" },
+            { latein: "littera", deutsch: "Brief" },
+            { latein: "Rōma", deutsch: "Rom" },
+            { latein: "imperātor", deutsch: "Befehlshaber, Feldherr, Kaiser" },
+            { latein: "servāre", deutsch: "bewahren, retten" },
+            { latein: "Athēnodōrus", deutsch: "Athenodorus (männlicher Eigenname)" },
+            { latein: "Rōmānus", deutsch: "Römer" },
+            { latein: "Ovidius", deutsch: "Ovid (römischer Dichter)" },
+            { latein: "Minerva", deutsch: "Minerva (Schutzgöttin Roms)" },
+            { latein: "Palātium", deutsch: "Palatin (einer der sieben Hügel Roms)" },
+            { latein: "Tiberis", deutsch: "Tiber" }
+        ],
+        11: [
+            { latein: "dubitāre", deutsch: "zögern" },
+            { latein: "sacrum", deutsch: "Opfer, Heiligtum" },
+            { latein: "perīculum", deutsch: "Gefahr" },
+            { latein: "esse, sum, fuī", deutsch: "sein, sich befinden" },
+            { latein: "posse", deutsch: "können" },
+            { latein: "calamitās", deutsch: "Unglück, Niederlage, Schaden" },
+            { latein: "necāre", deutsch: "töten" },
+            { latein: "marītus", deutsch: "Ehemann" },
+            { latein: "crēdere", deutsch: "anvertrauen, glauben" },
+            { latein: "mihi", deutsch: "mir" },
+            { latein: "vir", deutsch: "Mann" },
+            { latein: "sē", deutsch: "sich" },
+            { latein: "ubī", deutsch: "sobald" },
+            { latein: "mūnīre", deutsch: "bauen, befestigen, schützen" },
+            { latein: "mūrus", deutsch: "Mauer" },
+            { latein: "egō", deutsch: "ich" },
+            { latein: "enim", deutsch: "nämlich, in der Tat" },
+            { latein: "hostis", deutsch: "Feind (Landesfeind)" },
+            { latein: "ā / ab", deutsch: "von, von ... her" },
+            { latein: "prohibēre", deutsch: "abhalten (von), hindern (an)" },
+            { latein: "prohibērī", deutsch: "abgehalten werden" },
+            { latein: "īra", deutsch: "Zorn" },
+            { latein: "petere", deutsch: "(auf)suchen, (er)streben, bitten, verlangen" },
+            { latein: "hostēs / urbem petere", deutsch: "(Feinde / eine Stadt) angreifen" },
+            { latein: "frāter", deutsch: "Bruder" },
+            { latein: "lacrima", deutsch: "Träne" },
+            { latein: "tenēre", deutsch: "besitzen, festhalten, halten" },
+            { latein: "frūstrā", deutsch: "vergeblich" },
+            { latein: "rīpa", deutsch: "Ufer" },
+            { latein: "alere", deutsch: "ernähren, großziehen" },
+            { latein: "flēre", deutsch: "beklagen, (be)weinen" },
+            { latein: "nex", deutsch: "Mord, Tod" },
+            { latein: "complēre", deutsch: "anfüllen, erfüllen" },
+            { latein: "dēpōnere", deutsch: "ablegen, niederlegen, aufgeben" },
+            { latein: "compōnere", deutsch: "vergleichen" },
+            { latein: "colere", deutsch: "bewirtschaften, pflegen, verehren" },
+            { latein: "corripere", deutsch: "ergreifen, gewaltsam an sich reißen" },
+            { latein: "cupere", deutsch: "verlangen, wünschen, wollen" },
+            { latein: "velle", deutsch: "wollen" },
+            { latein: "nōlle", deutsch: "nicht wollen" }
+        ],
+        12: [], // Lektion 12 war nicht in der Textdatei, leer gelassen
+        13: [
+            { latein: "post", deutsch: "hinter, nach; dann, später" },
+            { latein: "vōx", deutsch: "Äußerung, Laut, Stimme" },
+            { latein: "arma", deutsch: "Waffen, Gerät" },
+            { latein: "marītus", deutsch: "Ehemann" },
+            { latein: "colere", deutsch: "bewirtschaften, pflegen; verehren" },
+            { latein: "tandem", deutsch: "endlich" },
+            { latein: "gēns", deutsch: "Familienverband, Stamm, Volk" },
+            { latein: "nex", deutsch: "Mord, Tod" },
+            { latein: "relinquere", deutsch: "unbeachtet lassen, verlassen, zurücklassen" },
+            { latein: "magnus, a, um", deutsch: "groß, bedeutend" },
+            { latein: "multus, a, um", deutsch: "viel" },
+            { latein: "multī, ae", deutsch: "viele" },
+            { latein: "multa n Pl.", deutsch: "viel(es)" },
+            { latein: "bonus, a, um", deutsch: "gut" },
+            { latein: "mors", deutsch: "Tod" },
+            { latein: "occupāre", deutsch: "besetzen, einnehmen" },
+            { latein: "terrēre", deutsch: "erschrecken" },
+            { latein: "causa", deutsch: "Ursache, Sache, Prozess" },
+            { latein: "cognōscere", deutsch: "erkennen, kennenlernen" },
+            { latein: "scelus", deutsch: "Verbrechen; Schurke" },
+            { latein: "rēx", deutsch: "König" },
+            { latein: "sors", deutsch: "Los, Orakelspruch, Schicksal" },
+            { latein: "miser, misera, miserum", deutsch: "arm, erbärmlich, unglücklich" },
+            { latein: "magnā vōce", deutsch: "mit lauter Stimme" },
+            { latein: "inquit", deutsch: "sagt(e) er" },
+            { latein: "propter", deutsch: "wegen" },
+            { latein: "expellere", deutsch: "vertreiben, verbannen" },
+            { latein: "superbus, a, um", deutsch: "stolz, überheblich" },
+            { latein: "malus, a, um", deutsch: "schlecht, schlimm" },
+            { latein: "ignōrāre", deutsch: "nicht kennen, nicht wissen" },
+            { latein: "nōn ignōrāre", deutsch: "genau wissen, gut kennen" },
+            { latein: "num", deutsch: "etwa?" },
+            { latein: "sanguis", deutsch: "Blut, Blutvergießen" },
+            { latein: "sī", deutsch: "falls, wenn" },
+            { latein: "tūtus, a, um", deutsch: "sicher (vor)" },
+            { latein: "tōtus, a, um", deutsch: "ganz" },
+            { latein: "līberāre", deutsch: "befreien, freilassen" },
+            { latein: "et ... et", deutsch: "sowohl ... als auch" },
+            { latein: "timēre", deutsch: "Angst haben, fürchten" },
+            { latein: "ita", deutsch: "so" },
+            { latein: "ultimus, a, um", deutsch: "der äußerste, der entfernteste, der letzte" }
+        ],
+        14: [
+            { latein: "tōtus", deutsch: "ganz" },
+            { latein: "adesse m. Dat.", deutsch: "helfen" },
+            { latein: "hostis", deutsch: "Feind" },
+            { latein: "uxor", deutsch: "Ehefrau" },
+            { latein: "salūs", deutsch: "Gesundheit, Glück, Rettung, Gruß" },
+            { latein: "vidēre", deutsch: "sehen, darauf achten" },
+            { latein: "dīcere", deutsch: "sagen, sprechen" },
+            { latein: "venīre", deutsch: "kommen" },
+            { latein: "capere", deutsch: "fassen, nehmen; erobern" },
+            { latein: "facere", deutsch: "machen, tun, handeln" },
+            { latein: "dūcere", deutsch: "führen, ziehen" },
+            { latein: "nōs", deutsch: "wir / uns" },
+            { latein: "accēdere", deutsch: "herbeikommen, hinzukommen" },
+            { latein: "postquam", deutsch: "nachdem" },
+            { latein: "legiō", deutsch: "Legion (ca. 5000–6000 Mann)" },
+            { latein: "vincere", deutsch: "(be)siegen, übertreffen" },
+            { latein: "suus, a, um", deutsch: "ihr, sein" },
+            { latein: "cūnctī, ae, a", deutsch: "alle (zusammen)" },
+            { latein: "meus, a, um", deutsch: "mein" },
+            { latein: "āmitttere", deutsch: "aufgeben, verlieren" },
+            { latein: "alius, a, ud", deutsch: "ein anderer" },
+            { latein: "alius ... alius", deutsch: "der eine ... der andere" },
+            { latein: "vocāre", deutsch: "rufen, nennen; bezeichnen als" },
+            { latein: "tibi", deutsch: "dir" },
+            { latein: "tuus, a, um", deutsch: "dein" },
+            { latein: "manēre", deutsch: "bleiben, warten (auf)" },
+            { latein: "ūnus, a, um", deutsch: "ein(e), ein einziger" },
+            { latein: "ūnus ex / dē", deutsch: "einer von" },
+            { latein: "vīvus, a, um", deutsch: "lebend, lebendig" },
+            { latein: "restāre", deutsch: "übrig bleiben; Widerstand leisten" },
+            { latein: "sōlum", deutsch: "nur" },
+            { latein: "nōn sōlum ... sed etiam", deutsch: "nicht nur ... sondern auch" },
+            { latein: "noster, nostra, nostrum", deutsch: "unser" },
+            { latein: "convenīre", deutsch: "besuchen, zusammenkommen, zusammenpassen" },
+            { latein: "cōnsulere", deutsch: "befragen; beraten (über)" },
+            { latein: "labor", deutsch: "Anstrengung, Arbeit" },
+            { latein: "mīles", deutsch: "Soldat" },
+            { latein: "oppidum", deutsch: "Stadt" },
+            { latein: "nōbīs", deutsch: "uns" },
+            { latein: "equidem", deutsch: "(ich) allerdings, freilich" },
+            { latein: "cēnsēre", deutsch: "meinen, einschätzen; seine Stimme abgeben (für)" },
+            { latein: "aperīre", deutsch: "aufdecken, öffnen" },
+            { latein: "cēnsor", deutsch: "Zensor (röm. Beamter)" },
+            { latein: "vērō", deutsch: "aber" },
+            { latein: "sententia", deutsch: "Antrag (im Senat), Meinung; Satz, Sinn" },
+            { latein: "proelium", deutsch: "Kampf, Schlacht" },
+            { latein: "moenia", deutsch: "(Stadt-)Mauern" },
+            { latein: "altus, a, um", deutsch: "hoch, tief" },
+            { latein: "mē", deutsch: "mich" },
+            { latein: "vōs", deutsch: "ihr / euch" },
+            { latein: "relinquere", deutsch: "unbeachtet lassen, verlassen, zurücklassen" },
+            { latein: "agere", deutsch: "handeln, treiben, verhandeln" },
+            { latein: "pervenīre", deutsch: "kommen zu / nach" },
+            { latein: "rīdēre", deutsch: "lachen, auslachen" },
+            { latein: "aspicere", deutsch: "erblicken" },
+            { latein: "Hannibal", deutsch: "Hannibal (Feldherr der Punier)" },
+            { latein: "Alpēs", deutsch: "die Alpen" },
+            { latein: "Italia", deutsch: "Italien" },
+            { latein: "Rōmam", deutsch: "nach Rom (Akkusativ der Richtung)" }
+        ]
+    };
+
+    // ==========================================
+    // 2. LOKALE SPEICHERUNG (LocalStorage)
+    // ==========================================
+    const STORAGE_KEY = 'latein_trainer_stats';
+
+    function loadStats() {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : { sessions: [] };
+    }
+
+    function saveStats(stats) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+    }
+
+    function addSession(lektion, total, correct, wrong, mode) {
+        const stats = loadStats();
+        stats.sessions.push({
+            lektion: lektion,
+            total: total,
+            correct: correct,
+            wrong: wrong,
+            percentage: Math.round((correct / total) * 100),
+            mode: mode,
+            date: new Date().toISOString()
+        });
+        saveStats(stats);
+    }
+
+    function getBestScore(lektion) {
+        const stats = loadStats();
+        const sessions = stats.sessions.filter(s => s.lektion === lektion);
+        if (sessions.length === 0) return null;
+        return Math.max(...sessions.map(s => s.percentage));
+    }
+
+    // ==========================================
+    // 3. SPIEL-LOGIK
+    // ==========================================
+
+    let currentLektion = 1;
+    let currentLernWord = null;
+    let lernWordsQueue = [];
+    let currentLernIndex = 0;
+    let isAnswered = false;
+    let isAnimating = false;
+    
+    // Statistik für aktuelle Session
+    let sessionCorrect = 0;
+    let sessionWrong = 0;
+    let lowScoreStreak = 0;
+
+    let testQuestions = [];
+    let currentTestIndex = 0;
+    let testScore = 0;
+    const TEST_LENGTH = 10;
+
+    let currentChart = null;
+
+    // --- STARTSEITE ---
+    function initStartScreen() {
+        const grid = document.getElementById('lektion-grid');
+        grid.innerHTML = '';
+        
+        for (let i = 1; i <= 14; i++) {
+            let wordCount = vokabelnDB[i] ? vokabelnDB[i].length : 0;
+            let best = getBestScore(i);
+            
+            let card = document.createElement('div');
+            card.className = 'lektion-card';
+            card.onclick = () => startLernMode(i);
+            card.innerHTML = `
+                <h3>Lektion ${i}</h3>
+                <span>${wordCount} Vokabeln</span>
+                ${best !== null ? `<div class="best-score">🏆 ${best}%</div>` : ''}
+            `;
+            grid.appendChild(card);
+        }
+    }
+
+    function goToStart() {
+        document.getElementById('start-screen').classList.remove('hidden');
+        document.getElementById('learn-screen').classList.add('hidden');
+        document.getElementById('test-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.add('hidden');
+        document.getElementById('stats-screen').classList.add('hidden');
+        initStartScreen();
+    }
+
+    function showStats() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('stats-screen').classList.remove('hidden');
+        
+        // Lektions-Dropdown füllen
+        const select = document.getElementById('stats-lektion');
+        select.innerHTML = '<option value="all">Alle Lektionen</option>';
+        for (let i = 1; i <= 14; i++) {
+            select.innerHTML += `<option value="${i}">Lektion ${i}</option>`;
+        }
+        
+        updateStats();
+    }
+
+    // --- LERNMODUS ---
+    function startLernMode(lektionNr) {
+        if (!vokabelnDB[lektionNr] || vokabelnDB[lektionNr].length === 0) {
+            alert("Für diese Lektion sind noch keine Vokabeln eingetragen.");
+            return;
+        }
+        
+        currentLektion = lektionNr;
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('learn-screen').classList.remove('hidden');
+        document.getElementById('learn-lektion-title').innerText = `Lektion ${lektionNr}`;
+
+        lernWordsQueue = vokabelnDB[lektionNr].map(v => ({ ...v, status: 'normal' }));
+        lernWordsQueue.sort(() => Math.random() - 0.5);
+        currentLernIndex = 0;
+        
+        sessionCorrect = 0;
+        sessionWrong = 0;
+        lowScoreStreak = 0;
+        
+        loadLernWord();
+    }
+
+    function loadLernWord() {
+        if (currentLernIndex >= lernWordsQueue.length) {
+            // Lektion beendet -> Statistiken speichern
+            const total = sessionCorrect + sessionWrong;
+            if (total > 0) {
+                addSession(currentLektion, total, sessionCorrect, sessionWrong, 'learn');
+            }
+            
+            document.getElementById('learn-question').innerText = "🎉 Lektion geschafft!";
+            document.getElementById('learn-question').style.background = "transparent";
+            document.getElementById('status-container').classList.add('hidden');
+            document.getElementById('options-container').innerHTML = '';
+            document.getElementById('learn-input').disabled = true;
+            document.getElementById('btn-forgot').classList.add('hidden');
+            document.getElementById('solution-display').classList.add('hidden');
+            return;
+        }
+
+        currentLernWord = lernWordsQueue[currentLernIndex];
+        isAnswered = false;
+        isAnimating = false;
+        
+        const questionEl = document.getElementById('learn-question');
+        const statusContainer = document.getElementById('status-container');
+        const statusBadge = document.getElementById('status-badge');
+        
+        questionEl.style.background = "transparent";
+        questionEl.style.transform = "none";
+        questionEl.style.opacity = "1";
+        questionEl.classList.remove('slide-out-left', 'slide-out-down', 'slide-in-right');
+        
+        if (currentLernWord.status === 'wrong') {
+            statusBadge.innerText = "⚠️ Zuvor falsch beantwortet";
+            statusContainer.classList.remove('hidden');
+            questionEl.style.background = "#fef9e7";
+            questionEl.style.border = "2px solid #f9e79f";
+        } else if (currentLernWord.status === 'forgotten') {
+            statusBadge.innerText = "⚠️ Zuvor vergessen";
+            statusContainer.classList.remove('hidden');
+            questionEl.style.background = "#fef9e7";
+            questionEl.style.border = "2px solid #f9e79f";
+        } else {
+            statusContainer.classList.add('hidden');
+            questionEl.style.border = "none";
+        }
+
+        questionEl.classList.add('slide-in-right');
+        void questionEl.offsetWidth;
+        questionEl.classList.remove('slide-in-right');
+        
+        questionEl.innerText = currentLernWord.latein;
+        document.getElementById('learn-progress').innerText = `${currentLernIndex + 1} / ${lernWordsQueue.length}`;
+        
+        document.getElementById('learn-input').value = "";
+        document.getElementById('learn-input').disabled = false;
+        document.getElementById('learn-input').style.borderColor = "#bdc3c7";
+        document.getElementById('solution-display').classList.add('hidden');
+        document.getElementById('btn-forgot').classList.remove('hidden');
+        
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        let options = [currentLernWord.deutsch];
+        while(options.length < 4) {
+            let randomWord = vokabelnDB[currentLektion][Math.floor(Math.random() * vokabelnDB[currentLektion].length)].deutsch;
+            if(!options.includes(randomWord)) {
+                options.push(randomWord);
+            }
+        }
+        options.sort(() => Math.random() - 0.5);
+
+        options.forEach(opt => {
+            let btn = document.createElement('button');
+            btn.className = "option-btn";
+            btn.innerHTML = `<span>${opt}</span>
+                <svg class="check-icon" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>`;
+            btn.onclick = () => checkChoice(opt, btn);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function slideWordOut(direction, callback) {
+        if (isAnimating) return;
+        isAnimating = true;
+        
+        const questionEl = document.getElementById('learn-question');
+        if (direction === 'left') {
+            questionEl.classList.add('slide-out-left');
+        } else if (direction === 'down') {
+            questionEl.classList.add('slide-out-down');
+        }
+        
+        setTimeout(() => {
+            callback();
+        }, 450);
+    }
+
+    function checkLowScore() {
+        // Prüfen, ob der Nutzer gerade schlecht abschneidet
+        const total = sessionCorrect + sessionWrong;
+        if (total >= 5) {
+            const percentage = (sessionCorrect / total) * 100;
+            if (percentage < 40) {
+                lowScoreStreak++;
+                if (lowScoreStreak >= 3) {
+                    showPausePopup(percentage);
+                    lowScoreStreak = 0;
+                }
+            } else {
+                lowScoreStreak = 0;
+            }
+        }
+    }
+
+    function showPausePopup(percentage) {
+        const sprueche = [
+            "Auch der längste Weg beginnt mit einem einzigen Schritt.",
+            "Fehler sind die Steine, auf denen wir zum Erfolg steigen.",
+            "Latein ist nicht schwer, es ist nur eine andere Art zu denken.",
+            "Jeder Meister war einmal ein Anfänger.",
+            "Gib nicht auf! Die Römer haben auch nicht an einem Tag ein Reich erobert."
+        ];
+        
+        document.getElementById('popup-spruch').innerText = `"${sprueche[Math.floor(Math.random() * sprueche.length)]}"`;
+        document.getElementById('popup-message').innerText = `Du hast aktuell nur ${percentage}% richtig. Möchtest du eine kurze Pause machen?`;
+        document.getElementById('popup-overlay').classList.remove('hidden');
+    }
+
+    function takePause() {
+        document.getElementById('popup-overlay').classList.add('hidden');
+        goToStart();
+    }
+
+    function continueLearning() {
+        document.getElementById('popup-overlay').classList.add('hidden');
+        lowScoreStreak = 0;
+    }
+
+    function checkChoice(selectedOpt, btn) {
+        if (isAnswered || isAnimating) return;
+        
+        if (selectedOpt === currentLernWord.deutsch) {
+            btn.classList.add('correct');
+            btn.disabled = true;
+            isAnswered = true;
+            sessionCorrect++;
+            document.getElementById('learn-input').disabled = true;
+            document.getElementById('btn-forgot').classList.add('hidden');
+            
+            slideWordOut('left', () => {
+                currentLernIndex++;
+                loadLernWord();
+            });
+        } else {
+            btn.classList.add('wrong');
+            btn.disabled = true;
+            sessionWrong++;
+            currentLernWord.status = 'wrong';
+            lernWordsQueue.push(currentLernWord);
+            checkLowScore();
+        }
+    }
+
+    function checkInput() {
+        if (isAnswered || isAnimating) return;
+        
+        const userInput = document.getElementById('learn-input').value.trim().toLowerCase();
+        const correct = currentLernWord.deutsch.toLowerCase();
+        
+        if (userInput === correct || (correct.includes(userInput) && userInput.length > 2)) {
+            document.getElementById('learn-input').style.borderColor = "var(--success)";
+            isAnswered = true;
+            sessionCorrect++;
+            document.getElementById('btn-forgot').classList.add('hidden');
+            
+            slideWordOut('left', () => {
+                currentLernIndex++;
+                loadLernWord();
+            });
+        } else {
+            document.getElementById('learn-input').style.borderColor = "var(--danger)";
+            sessionWrong++;
+            currentLernWord.status = 'wrong';
+            lernWordsQueue.push(currentLernWord);
+            checkLowScore();
+        }
+    }
+
+    function revealSolution() {
+        if (isAnswered || isAnimating) return;
+        
+        document.getElementById('solution-display').innerText = currentLernWord.deutsch;
+        document.getElementById('solution-display').classList.remove('hidden');
+        document.getElementById('btn-forgot').classList.add('hidden');
+        isAnswered = true;
+        sessionWrong++;
+        
+        currentLernWord.status = 'forgotten';
+        lernWordsQueue.push(currentLernWord);
+        checkLowScore();
+        
+        setTimeout(() => {
+            slideWordOut('down', () => {
+                currentLernIndex++;
+                loadLernWord();
+            });
+        }, 2000);
+    }
+
+    // --- TESTMODUS ---
+    function startTestMode(lektionNr) {
+        if (!vokabelnDB[lektionNr] || vokabelnDB[lektionNr].length < 4) {
+            alert("Für einen Test werden mindestens 4 Vokabeln benötigt.");
+            return;
+        }
+
+        currentLektion = lektionNr;
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('test-screen').classList.remove('hidden');
+        document.getElementById('result-screen').classList.add('hidden');
+
+        let shuffled = [...vokabelnDB[lektionNr]].sort(() => Math.random() - 0.5);
+        testQuestions = shuffled.slice(0, Math.min(TEST_LENGTH, shuffled.length));
+        
+        currentTestIndex = 0;
+        testScore = 0;
+        
+        updateTestUI();
+    }
+
+    function updateTestUI() {
+        document.getElementById('test-progress-text').innerText = `Frage ${currentTestIndex + 1} / ${testQuestions.length}`;
+        document.getElementById('test-score-text').innerText = `Punkte: ${testScore}`;
+        document.getElementById('test-progress-fill').style.width = `${(currentTestIndex / testQuestions.length) * 100}%`;
+        
+        document.getElementById('test-question').innerText = testQuestions[currentTestIndex].latein;
+        document.getElementById('test-input').value = "";
+        document.getElementById('test-input').disabled = false;
+        document.getElementById('test-feedback-area').innerHTML = "";
+        document.getElementById('test-input').focus();
+    }
+
+    function submitTestAnswer() {
+        const userInput = document.getElementById('test-input').value.trim().toLowerCase();
+        const correct = testQuestions[currentTestIndex].deutsch.toLowerCase();
+        
+        document.getElementById('test-input').disabled = true;
+        const feedbackArea = document.getElementById('test-feedback-area');
+
+        if (userInput === correct || (correct.includes(userInput) && userInput.length > 2)) {
+            testScore++;
+            feedbackArea.innerHTML = `<span style="color:var(--success); font-size:20px; font-weight:bold;">Richtig! ✅</span>`;
+        } else {
+            feedbackArea.innerHTML = `<span style="color:var(--danger); font-size:18px; font-weight:bold;">Falsch! ❌<br><span style="font-size:14px; color:#7f8c8d;">Lösung: ${testQuestions[currentTestIndex].deutsch}</span></span>`;
+        }
+
+        setTimeout(() => {
+            currentTestIndex++;
+            if (currentTestIndex < testQuestions.length) {
+                updateTestUI();
+            } else {
+                endTest();
+            }
+        }, 2000);
+    }
+
+    function endTest() {
+        document.getElementById('test-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+
+        // Session speichern
+        addSession(currentLektion, testQuestions.length, testScore, testQuestions.length - testScore, 'test');
+
+        document.getElementById('final-score').innerText = `${testScore} / ${testQuestions.length}`;
+        
+        let percentage = (testScore / testQuestions.length) * 100;
+        let note = 6;
+        let gradeClass = "grade-6";
+
+        if (percentage >= 90) { note = 1; gradeClass = "grade-1"; }
+        else if (percentage >= 80) { note = 2; gradeClass = "grade-2"; }
+        else if (percentage >= 60) { note = 3; gradeClass = "grade-3"; }
+        else if (percentage >= 40) { note = 4; gradeClass = "grade-4"; }
+        else if (percentage >= 20) { note = 5; gradeClass = "grade-5"; }
+
+        const gradeEl = document.getElementById('final-grade');
+        gradeEl.innerText = `Note: ${note}`;
+        gradeEl.className = `result-grade ${gradeClass}`;
+
+        let msg = "";
+        if (note === 1) msg = "Perfekt! Du bist ein Latein-Profi! 🏆";
+        else if (note === 2) msg = "Sehr gut! Weiter so! 🌟";
+        else if (note === 3) msg = "Gut gemacht! Da geht noch was. 👍";
+        else if (note === 4) msg = "Bestanden, aber du solltest nochmal wiederholen. 📖";
+        else msg = "Ohje, das war nicht so gut. Lern nochmal im Lernmodus! 💪";
+        
+        document.getElementById('final-message').innerText = msg;
+    }
+
+    // ==========================================
+    // 4. STATISTIK (Chart.js)
+    // ==========================================
+    function updateStats() {
+        const lektionFilter = document.getElementById('stats-lektion').value;
+        const chartType = document.getElementById('stats-type').value;
+        
+        const stats = loadStats();
+        let sessions = stats.sessions;
+        
+        if (lektionFilter !== 'all') {
+            sessions = sessions.filter(s => s.lektion === parseInt(lektionFilter));
+        }
+        
+        // Änderungsindikator
+        const indicator = document.getElementById('change-indicator');
+        if (sessions.length < 2) {
+            indicator.className = 'change-indicator change-neutral';
+            indicator.innerText = sessions.length === 0 ? 'Noch keine Daten vorhanden.' : 'Noch mehr Daten für einen Vergleich nötig.';
+        } else {
+            const last = sessions[sessions.length - 1].percentage;
+            const prev = sessions[sessions.length - 2].percentage;
+            const diff = last - prev;
+            
+            if (diff > 0) {
+                indicator.className = 'change-indicator change-positive';
+                indicator.innerText = `📈 +${diff}% besser als beim letzten Mal! (Letztes Mal: ${prev}%, Jetzt: ${last}%)`;
+            } else if (diff < 0) {
+                indicator.className = 'change-indicator change-negative';
+                indicator.innerText = `📉 ${diff}% schlechter als beim letzten Mal. (Letztes Mal: ${prev}%, Jetzt: ${last}%)`;
+            } else {
+                indicator.className = 'change-indicator change-neutral';
+                indicator.innerText = `➡️ Genau gleich geblieben. (${last}%)`;
+            }
+        }
+        
+        // Chart zeichnen
+        const ctx = document.getElementById('stats-chart').getContext('2d');
+        
+        if (currentChart) {
+            currentChart.destroy();
+        }
+        
+        const labels = sessions.map((s, i) => {
+            const date = new Date(s.date);
+            const dateStr = `${date.getDate()}.${date.getMonth()+1}. ${date.getHours()}:${String(date.getMinutes()).padStart(2,'0')}`;
+            return `#${i+1} (L${s.lektion}) ${dateStr}`;
+        });
+        
+        const data = sessions.map(s => s.percentage);
+        
+        const colors = data.map(v => v >= 70 ? 'rgba(39, 174, 96, 0.7)' : v >= 40 ? 'rgba(243, 156, 18, 0.7)' : 'rgba(231, 76, 60, 0.7)');
+        const borderColors = data.map(v => v >= 70 ? 'rgba(39, 174, 96, 1)' : v >= 40 ? 'rgba(243, 156, 18, 1)' : 'rgba(231, 76, 60, 1)');
+        
+        currentChart = new Chart(ctx, {
+            type: chartType,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Richtig (%)',
+                    data: data,
+                    backgroundColor: chartType === 'bar' ? colors : 'rgba(52, 152, 219, 0.1)',
+                    borderColor: chartType === 'line' ? 'rgba(52, 152, 219, 1)' : borderColors,
+                    borderWidth: chartType === 'line' ? 3 : 2,
+                    fill: chartType === 'line',
+                    tension: 0.3,
+                    pointBackgroundColor: chartType === 'line' ? borderColors : undefined,
+                    pointRadius: chartType === 'line' ? 6 : undefined,
+                    pointHoverRadius: chartType === 'line' ? 8 : undefined
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) { return value + '%'; }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: { size: 10 }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Richtig: ${context.parsed.y}%`;
+                            },
+                            afterLabel: function(context) {
+                                const session = sessions[context.dataIndex];
+                                return `Lektion ${session.lektion} | ${session.correct}/${session.total} richtig`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Initialisierung
+    initStartScreen();
+
+</script>
+</body>
+</html>
