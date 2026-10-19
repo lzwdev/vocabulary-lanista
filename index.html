@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latein Vokabeltrainer Pro</title>
+    <title>Latein Vokabeltrainer Pro + KI</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -16,6 +16,10 @@
             --danger: #e74c3c;
             --warning: #f39c12;
             --purple: #9b59b6;
+            --ai-bg: #1e2632;
+            --ai-text: #e8edf5;
+            --ai-accent: #4ade80;
+            --ai-border: #334155;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -29,6 +33,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow: hidden;
         }
 
         .app-container {
@@ -404,6 +409,308 @@
             box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
         }
 
+        /* ==========================================
+           KI CHAT WIDGET (Verschiebbar)
+           ========================================== */
+        .ai-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(118, 75, 162, 0.5);
+            z-index: 900;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .ai-fab:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 15px 35px rgba(118, 75, 162, 0.7);
+        }
+
+        .ai-chat-window {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 400px;
+            height: 600px;
+            background: var(--ai-bg);
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+            border: 1px solid var(--ai-border);
+            transform-origin: bottom right;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            user-select: none;
+        }
+        
+        .ai-chat-window.hidden {
+            transform: scale(0.5);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ai-header {
+            background: #141a24;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--ai-border);
+            cursor: grab;
+        }
+
+        .ai-header:active { cursor: grabbing; }
+
+        .ai-header h3 {
+            color: var(--ai-text);
+            font-size: 16px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-header h3 span {
+            font-size: 12px;
+            background: var(--ai-accent);
+            color: #0b0f17;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .ai-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.2s;
+            pointer-events: auto;
+        }
+        .ai-close:hover { color: white; }
+
+        .ai-chat {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            user-select: text;
+        }
+
+        /* Markdown-Styling innerhalb der KI-Nachrichten */
+        .ai-message {
+            max-width: 90%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13.5px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+
+        .ai-message.user {
+            align-self: flex-end;
+            background: #1e3a2e;
+            color: #dcfce7;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message.bot {
+            align-self: flex-start;
+            background: #1a2330;
+            color: var(--ai-text);
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--ai-border);
+        }
+
+        /* Markdown-Elemente im Bot-Chat */
+        .ai-message.bot p { margin: 6px 0; }
+        .ai-message.bot p:first-child { margin-top: 0; }
+        .ai-message.bot p:last-child { margin-bottom: 0; }
+
+        .ai-message.bot h1, 
+        .ai-message.bot h2, 
+        .ai-message.bot h3, 
+        .ai-message.bot h4 {
+            color: var(--ai-text);
+            margin: 12px 0 6px 0;
+            text-align: left;
+            font-weight: 600;
+        }
+        .ai-message.bot h1 { font-size: 1.3em; border-bottom: 1px solid var(--ai-border); padding-bottom: 4px; }
+        .ai-message.bot h2 { font-size: 1.2em; }
+        .ai-message.bot h3 { font-size: 1.1em; }
+        .ai-message.bot h4 { font-size: 1em; }
+
+        .ai-message.bot ul, 
+        .ai-message.bot ol {
+            margin: 6px 0;
+            padding-left: 20px;
+        }
+        .ai-message.bot li { margin: 3px 0; }
+
+        .ai-message.bot strong { color: #fff; font-weight: 600; }
+        .ai-message.bot em { font-style: italic; color: #cbd5e1; }
+
+        .ai-message.bot code:not(pre code) {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            border: 1px solid var(--ai-border);
+        }
+
+        .ai-message.bot pre {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+            border: 1px solid var(--ai-border);
+            font-size: 0.8em;
+            line-height: 1.4;
+        }
+        .ai-message.bot pre code {
+            background: transparent;
+            padding: 0;
+            border: none;
+            color: #e6edf3;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+        }
+
+        /* Tabellen-Styling */
+        .ai-message.bot table {
+            border-collapse: collapse;
+            margin: 10px 0;
+            width: 100%;
+            font-size: 0.8em;
+            border: 1px solid var(--ai-border);
+            border-radius: 8px;
+            overflow: hidden;
+            display: block;
+            overflow-x: auto;
+        }
+
+        .ai-message.bot thead {
+            background: #141a24;
+        }
+
+        .ai-message.bot th {
+            background: #141a24;
+            color: #e8edf5;
+            font-weight: 600;
+            padding: 8px 10px;
+            border: 1px solid var(--ai-border);
+            text-align: left;
+        }
+
+        .ai-message.bot td {
+            padding: 6px 10px;
+            border: 1px solid var(--ai-border);
+            color: #cbd5e1;
+        }
+
+        .ai-message.bot tr:nth-child(even) td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .ai-message.bot blockquote {
+            border-left: 3px solid var(--ai-accent);
+            padding-left: 12px;
+            margin: 8px 0;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .ai-message.bot hr {
+            border: none;
+            border-top: 1px solid var(--ai-border);
+            margin: 10px 0;
+        }
+
+        .ai-message.bot a {
+            color: var(--ai-accent);
+            text-decoration: none;
+        }
+        .ai-message.bot a:hover { text-decoration: underline; }
+
+        .ai-input-area {
+            padding: 12px 15px;
+            background: #141a24;
+            border-top: 1px solid var(--ai-border);
+            display: flex;
+            gap: 10px;
+        }
+
+        .ai-input-area input {
+            flex: 1;
+            background: #1e2632;
+            border: 1px solid var(--ai-border);
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: var(--ai-text);
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            outline: none;
+            user-select: text;
+        }
+        .ai-input-area input:focus { border-color: var(--ai-accent); }
+
+        .ai-send-btn {
+            background: var(--ai-accent);
+            color: #0b0f17;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .ai-send-btn:hover { background: #22c55e; }
+
+        .ai-loading {
+            display: flex;
+            gap: 4px;
+            padding: 10px 14px;
+            background: #1a2330;
+            border-radius: 14px;
+            align-self: flex-start;
+            border: 1px solid var(--ai-border);
+        }
+        .ai-loading span {
+            width: 6px;
+            height: 6px;
+            background: var(--ai-accent);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .ai-loading span:nth-child(1) { animation-delay: -0.32s; }
+        .ai-loading span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
     </style>
 </head>
 <body>
@@ -531,6 +838,27 @@
             <button class="popup-btn-pause" onclick="takePause()">☕ Pause machen</button>
             <button class="popup-btn-continue" onclick="continueLearning()">💪 Weitermachen</button>
         </div>
+    </div>
+</div>
+
+<!-- KI CHAT WIDGET -->
+<div class="ai-fab" id="ai-fab" onclick="toggleAI()">💬</div>
+
+<div class="ai-chat-window hidden" id="ai-chat-window">
+    <div class="ai-header" id="ai-drag-handle">
+        <h3>Latein KI <span>BETA</span></h3>
+        <button class="ai-close" onclick="toggleAI()">✕</button>
+    </div>
+    <div class="ai-chat" id="ai-chat-container">
+        <div class="ai-message bot">
+            Salve! Ich bin dein Latein-Assistent. Frag mich alles über Vokabeln, Grammatik oder römische Geschichte. (Ich antworte nur auf Latein-Fragen!)
+        </div>
+    </div>
+    <div class="ai-input-area">
+        <input type="text" id="ai-input" placeholder="Frage zu Latein..." autocomplete="off" onkeypress="handleAIKeyPress(event)">
+        <button class="ai-send-btn" onclick="sendAIMessage()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
     </div>
 </div>
 
@@ -1101,7 +1429,6 @@
     let isAnswered = false;
     let isAnimating = false;
     
-    // Statistik für aktuelle Session
     let sessionCorrect = 0;
     let sessionWrong = 0;
     let lowScoreStreak = 0;
@@ -1147,7 +1474,6 @@
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('stats-screen').classList.remove('hidden');
         
-        // Lektions-Dropdown füllen
         const select = document.getElementById('stats-lektion');
         select.innerHTML = '<option value="all">Alle Lektionen</option>';
         for (let i = 1; i <= 14; i++) {
@@ -1182,7 +1508,6 @@
 
     function loadLernWord() {
         if (currentLernIndex >= lernWordsQueue.length) {
-            // Lektion beendet -> Statistiken speichern
             const total = sessionCorrect + sessionWrong;
             if (total > 0) {
                 addSession(currentLektion, total, sessionCorrect, sessionWrong, 'learn');
@@ -1280,7 +1605,6 @@
     }
 
     function checkLowScore() {
-        // Prüfen, ob der Nutzer gerade schlecht abschneidet
         const total = sessionCorrect + sessionWrong;
         if (total >= 5) {
             const percentage = (sessionCorrect / total) * 100;
@@ -1452,7 +1776,6 @@
         document.getElementById('test-screen').classList.add('hidden');
         document.getElementById('result-screen').classList.remove('hidden');
 
-        // Session speichern
         addSession(currentLektion, testQuestions.length, testScore, testQuestions.length - testScore, 'test');
 
         document.getElementById('final-score').innerText = `${testScore} / ${testQuestions.length}`;
@@ -1495,7 +1818,6 @@
             sessions = sessions.filter(s => s.lektion === parseInt(lektionFilter));
         }
         
-        // Änderungsindikator
         const indicator = document.getElementById('change-indicator');
         if (sessions.length < 2) {
             indicator.className = 'change-indicator change-neutral';
@@ -1517,7 +1839,6 @@
             }
         }
         
-        // Chart zeichnen
         const ctx = document.getElementById('stats-chart').getContext('2d');
         
         if (currentChart) {
@@ -1589,8 +1910,338 @@
         });
     }
 
+    // ==========================================
+    // 5. KI CHAT LOGIK (Groq)
+    // ==========================================
+    const GROQ_API_KEY = "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"; // Dein Key
+    const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+    const AI_MODEL = "openai/gpt-oss-120b"; // Aktuelles, funktionierendes Modell
+    
+    let aiChatHistory = [
+        { 
+            role: "system", 
+            content: "Du bist ein hilfsbereiter Latein-Assistent für Schüler. Du darfst NUR Fragen beantworten, die mit der lateinischen Sprache, römischer Geschichte, Kultur, Mythologie oder dem Übersetzen von Latein zu tun haben. Wenn der Nutzer nach etwas fragt, das nichts mit Latein zu tun hat (z.B. Mathe, Kochen, Programmieren), antworte höflich, dass du nur für Latein-Fragen zuständig bist. Antworte immer auf Deutsch, außer es wird explizit eine lateinische Übersetzung verlangt. Halte die Antworten kurz und verständlich für Schüler." 
+        }
+    ];
+
+    function toggleAI() {
+        const win = document.getElementById('ai-chat-window');
+        win.classList.toggle('hidden');
+        if (!win.classList.contains('hidden')) {
+            document.getElementById('ai-input').focus();
+        }
+    }
+
+    function handleAIKeyPress(e) {
+        if (e.key === 'Enter') {
+            sendAIMessage();
+        }
+    }
+
+    // MARKDOWN PARSER
+    function renderMarkdown(text) {
+        if (!text) return '';
+
+        // 1. Code-Blöcke (```)
+        let codeBlocks = [];
+        text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+            const idx = codeBlocks.length;
+            codeBlocks.push({ lang: lang || '', code: code.replace(/\n$/, '') });
+            return `\u0000CODEBLOCK_${idx}\u0000`;
+        });
+
+        // 2. Tabellen
+        const lines = text.split('\n');
+        let inTable = false;
+        let tableHTML = '';
+        let resultLines = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            
+            // Tabellen-Erkennung (Zeile mit | und nächste Zeile mit |---|)
+            if (line.includes('|') && i + 1 < lines.length && /^\s*\|?[\s\-:|]+\|?\s*$/.test(lines[i+1])) {
+                inTable = true;
+                tableHTML = '<table><thead><tr>';
+                const headers = line.split('|').map(h => h.trim()).filter(h => h);
+                headers.forEach(h => {
+                    tableHTML += `<th>${inlineFormat(h)}</th>`;
+                });
+                tableHTML += '</tr></thead><tbody>';
+                i++; // Überspringe Trennzeile
+                continue;
+            }
+            
+            // Tabellen-Zeilen
+            if (inTable) {
+                if (line.includes('|')) {
+                    const cells = line.split('|').map(c => c.trim()).filter(c => c);
+                    tableHTML += '<tr>';
+                    cells.forEach(c => {
+                        tableHTML += `<td>${inlineFormat(c)}</td>`;
+                    });
+                    tableHTML += '</tr>';
+                } else {
+                    // Tabelle endet
+                    tableHTML += '</tbody></table>';
+                    resultLines.push(tableHTML);
+                    inTable = false;
+                    tableHTML = '';
+                    resultLines.push(line);
+                }
+            } else {
+                resultLines.push(line);
+            }
+        }
+        
+        // Falls Tabelle am Ende offen
+        if (inTable) {
+            tableHTML += '</tbody></table>';
+            resultLines.push(tableHTML);
+        }
+
+        let html = resultLines.join('\n');
+
+        // 3. Überschriften
+        html = html.replace(/^######\s+(.*)$/gm, '<h6>$1</h6>');
+        html = html.replace(/^#####\s+(.*)$/gm, '<h5>$1</h5>');
+        html = html.replace(/^####\s+(.*)$/gm, '<h4>$1</h4>');
+        html = html.replace(/^###\s+(.*)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^##\s+(.*)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^#\s+(.*)$/gm, '<h1>$1</h1>');
+
+        // 4. Horizontale Linien
+        html = html.replace(/^\s*---+\s*$/gm, '<hr>');
+
+        // 5. Blockquotes
+        html = html.replace(/^>\s?(.*)$/gm, '<blockquote>$1</blockquote>');
+
+        // 6. Listen (ungeordnet)
+        html = html.replace(/^\s*[-*+]\s+(.*)$/gm, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+        // 7. Listen (geordnet)
+        html = html.replace(/^\s*\d+\.\s+(.*)$/gm, '<li>$1</li>');
+
+        // 8. Fett und Kursiv
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+        // 9. Inline-Code
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+        // 10. Links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+
+        // 11. Absätze
+        html = html.replace(/\n\n/g, '</p><p>');
+        html = html.replace(/\n/g, '<br>');
+        html = '<p>' + html + '</p>';
+
+        // 12. Code-Blöcke einsetzen
+        codeBlocks.forEach((block, idx) => {
+            const codeHtml = `<pre><code class="language-${block.lang}">${escapeHtml(block.code)}</code></pre>`;
+            html = html.replace(`\u0000CODEBLOCK_${idx}\u0000`, codeHtml);
+        });
+
+        // 13. Aufräumen
+        html = html.replace(/<p><\/p>/g, '');
+        html = html.replace(/<p><table>/g, '<table>');
+        html = html.replace(/<\/table><\/p>/g, '</table>');
+        html = html.replace(/<p><ul>/g, '<ul>');
+        html = html.replace(/<\/ul><\/p>/g, '</ul>');
+        html = html.replace(/<p><blockquote>/g, '<blockquote>');
+        html = html.replace(/<\/blockquote><\/p>/g, '</blockquote>');
+        html = html.replace(/<p><hr><\/p>/g, '<hr>');
+        html = html.replace(/<p><h([1-6])>/g, '<h$1>');
+        html = html.replace(/<\/h([1-6])><\/p>/g, '</h$1>');
+
+        return html;
+    }
+
+    function inlineFormat(text) {
+        if (!text) return '';
+        text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+        return text;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function addAIMessage(text, isUser) {
+        const container = document.getElementById('ai-chat-container');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `ai-message ${isUser ? 'user' : 'bot'}`;
+        
+        if (isUser) {
+            // User-Nachrichten werden einfach mit Zeilenumbrüchen dargestellt
+            msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+        } else {
+            // Bot-Nachrichten werden mit Markdown gerendert
+            msgDiv.innerHTML = renderMarkdown(text);
+        }
+        
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function showAILoading() {
+        const container = document.getElementById('ai-chat-container');
+        const loader = document.createElement('div');
+        loader.className = 'ai-loading';
+        loader.id = 'ai-loader';
+        loader.innerHTML = '<span></span><span></span><span></span>';
+        container.appendChild(loader);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function hideAILoading() {
+        const loader = document.getElementById('ai-loader');
+        if (loader) loader.remove();
+    }
+
+    async function sendAIMessage() {
+        const input = document.getElementById('ai-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        input.value = '';
+        addAIMessage(text, true);
+        showAILoading();
+
+        aiChatHistory.push({ role: "user", content: text });
+
+        try {
+            const response = await fetch(GROQ_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GROQ_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: AI_MODEL,
+                    messages: aiChatHistory,
+                    temperature: 0.5,
+                    max_tokens: 800
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Fehler: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const botReply = data.choices[0].message.content;
+
+            aiChatHistory.push({ role: "assistant", content: botReply });
+            
+            hideAILoading();
+            addAIMessage(botReply, false);
+
+        } catch (error) {
+            console.error(error);
+            hideAILoading();
+            addAIMessage("Entschuldigung, ich konnte gerade keine Verbindung zum Server herstellen. Bitte versuche es später noch einmal.", false);
+        }
+    }
+
+    // ==========================================
+    // 6. DRAG & DROP FÜR KI FENSTER
+    // ==========================================
+    function initDrag() {
+        const chatWindow = document.getElementById('ai-chat-window');
+        const dragHandle = document.getElementById('ai-drag-handle');
+        
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        // Maus-Events
+        dragHandle.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('ai-close')) return;
+            
+            isDragging = true;
+            const rect = chatWindow.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            
+            chatWindow.style.bottom = 'auto';
+            chatWindow.style.right = 'auto';
+            chatWindow.style.left = rect.left + 'px';
+            chatWindow.style.top = rect.top + 'px';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            let newX = e.clientX - offsetX;
+            let newY = e.clientY - offsetY;
+            
+            const maxX = window.innerWidth - chatWindow.offsetWidth;
+            const maxY = window.innerHeight - chatWindow.offsetHeight;
+            
+            if (newX < 0) newX = 0;
+            if (newY < 0) newY = 0;
+            if (newX > maxX) newX = maxX;
+            if (newY > maxY) newY = maxY;
+            
+            chatWindow.style.left = newX + 'px';
+            chatWindow.style.top = newY + 'px';
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        // Touch-Events
+        dragHandle.addEventListener('touchstart', (e) => {
+            if (e.target.classList.contains('ai-close')) return;
+            
+            isDragging = true;
+            const touch = e.touches[0];
+            const rect = chatWindow.getBoundingClientRect();
+            offsetX = touch.clientX - rect.left;
+            offsetY = touch.clientY - rect.top;
+            
+            chatWindow.style.bottom = 'auto';
+            chatWindow.style.right = 'auto';
+            chatWindow.style.left = rect.left + 'px';
+            chatWindow.style.top = rect.top + 'px';
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            let newX = touch.clientX - offsetX;
+            let newY = touch.clientY - offsetY;
+            
+            const maxX = window.innerWidth - chatWindow.offsetWidth;
+            const maxY = window.innerHeight - chatWindow.offsetHeight;
+            
+            if (newX < 0) newX = 0;
+            if (newY < 0) newY = 0;
+            if (newX > maxX) newX = maxX;
+            if (newY > maxY) newY = maxY;
+            
+            chatWindow.style.left = newX + 'px';
+            chatWindow.style.top = newY + 'px';
+        }, { passive: false });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+    }
+
     // Initialisierung
     initStartScreen();
+    initDrag();
 
 </script>
 </body>
